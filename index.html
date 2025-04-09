@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家系図アプリケーション</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- React と React DOM のCDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel のCDN（JSXのトランスパイル用） -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>家系図アプリケーション</h1>
+        <nav>
+            <button id="load-sample">サンプルデータ読み込み</button>
+            <button id="save-data">データ保存</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Reactアプリケーションのルート要素 -->
+        <div id="family-tree-app"></div>
+    </main>
+
+    <footer>
+        <p>家系図アプリケーション Ver.0.1.0</p>
+    </footer>
+
+    <!-- モデル -->
+    <script src="js/models/constants.js"></script>
+    <script src="js/models/Person.js"></script>
+    <script src="js/models/FamilyTree.js"></script>
+    
+    <!-- ユーティリティ -->
+    <script src="js/utils/layoutCalculator.js"></script>
+    <script src="js/utils/fileManager.js"></script>
+    
+    <!-- Reactコンポーネント（JSX使用） -->
+    <script type="text/babel" src="js/views/PersonNode.js"></script>
+    <script type="text/babel" src="js/views/RelationshipLine.js"></script>
+    <script type="text/babel" src="js/views/FamilyTreeView.js"></script>
+    
+    <!-- コントローラー -->
+    <script src="js/controllers/FamilyTreeController.js"></script>
+    <script src="js/controllers/FileController.js"></script>
+    
+    <!-- メインアプリケーション -->
+    <script type="text/babel" src="js/app.js"></script>
+</body>
+</html>
