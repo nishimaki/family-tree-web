@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PersonList from './components/PersonList';
+import PersonEditor from './components/PersonEditor';
 import FamilyTreeGraph from './components/FamilyTreeGraph';
 import FileManager from './services/FileManager';
 import './App.css';
@@ -10,9 +11,12 @@ function App() {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('list'); // 'list' または 'tree'
+  const [activeTab, setActiveTab] = useState('list');
   const [hierarchyData, setHierarchyData] = useState(null);
   const [selectedRootId, setSelectedRootId] = useState(null);
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const [editingPerson, setEditingPerson] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
   
   /**
    * ファイル選択イベントハンドラ
@@ -46,6 +50,8 @@ function App() {
       }
       
       setLoading(false);
+      setShowFileMenu(false);
+      setHasChanges(false);
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -58,14 +64,47 @@ function App() {
    * @param {Object} person 
    */
   const handlePersonSelect = (person) => {
-    console.log('Selected person:', person);
-    
-    // 選択された人物をルートにした家系図を表示
     if (familyTree && person.id) {
       setSelectedRootId(person.id);
       setHierarchyData(familyTree.getHierarchyData(person.id));
-      // 家系図タブに切り替え
       setActiveTab('tree');
+      setShowFileMenu(false);
+    }
+  };
+  
+  const handlePersonEdit = (person) => {
+    setEditingPerson(person);
+    setActiveTab('edit');
+    setShowFileMenu(false);
+  };
+
+  const handlePersonSave = (editedPerson) => {
+    if (familyTree) {
+      familyTree.updatePerson(editedPerson.id, editedPerson);
+      const updatedPersons = Object.values(familyTree.getAllPersons());
+      setPersons(updatedPersons);
+      setEditingPerson(null);
+      setActiveTab('list');
+      setHasChanges(true);
+    }
+  };
+
+  const handlePersonEditCancel = () => {
+    setEditingPerson(null);
+    setActiveTab('list');
+  };
+
+  const handleSaveFile = async () => {
+    if (familyTree && hasChanges) {
+      try {
+        setLoading(true);
+        await FileManager.saveFamilyTree(familyTree, familyTree.title || 'family_tree');
+        setHasChanges(false);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
     }
   };
   
@@ -75,89 +114,137 @@ function App() {
    */
   const switchTab = (tabName) => {
     setActiveTab(tabName);
+    setShowFileMenu(false);
+  };
+  
+  const toggleFileMenu = () => {
+    setShowFileMenu(!showFileMenu);
+    if (!showFileMenu) {
+      setActiveTab(null);
+    }
   };
   
   return (
     <div className="app">
       <header className="app-header">
         <h1>家系図アプリケーション</h1>
+        <nav className="main-nav">
+          <button 
+            className={`nav-button ${showFileMenu ? 'active' : ''}`}
+            onClick={toggleFileMenu}
+          >
+            ファイル操作
+          </button>
+          {familyTree && (
+            <>
+              <button 
+                className={`nav-button ${activeTab === 'list' ? 'active' : ''}`}
+                onClick={() => switchTab('list')}
+              >
+                人物一覧
+              </button>
+              <button 
+                className={`nav-button ${activeTab === 'tree' ? 'active' : ''}`}
+                onClick={() => switchTab('tree')}
+              >
+                家系図表示
+              </button>
+            </>
+          )}
+        </nav>
       </header>
       
       <main className="app-main">
-        <section className="file-section">
-          <h2>ファイル操作</h2>
-          <div className="file-input">
-            <label htmlFor="file-upload">JSONファイルを選択してください:</label>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".json"
-              onChange={handleFileChange}
-              disabled={loading}
-            />
-          </div>
-          
-          {loading && (
-            <div className="loading">
-              <p>読み込み中...</p>
+        {showFileMenu && (
+          <section className="file-section">
+            <h2>ファイル操作</h2>
+            <div className="file-input">
+              <label htmlFor="file-upload">JSONファイルを選択してください:</label>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                disabled={loading}
+              />
             </div>
-          )}
-          
-          {error && (
-            <div className="error">
-              <p>エラー: {error}</p>
-            </div>
-          )}
-          
-          {warnings.length > 0 && (
-            <div className="warnings">
-              <h3>警告:</h3>
-              <ul>
-                {warnings.map((warning, index) => (
-                  <li key={index}>{warning}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {familyTree && (
-            <div className="family-info">
-              <h3>家系図情報</h3>
-              <p><strong>タイトル:</strong> {familyTree.title || "(なし)"}</p>
-              <p><strong>説明:</strong> {familyTree.description || "(なし)"}</p>
-              <p><strong>人物数:</strong> {Object.keys(familyTree.getAllPersons()).length}</p>
-            </div>
-          )}
-        </section>
-        
-        {familyTree && (
-          <div className="tabs">
-            <div 
-              className={`tab ${activeTab === 'list' ? 'active' : ''}`}
-              onClick={() => switchTab('list')}
-            >
-              人物一覧
-            </div>
-            <div 
-              className={`tab ${activeTab === 'tree' ? 'active' : ''}`}
-              onClick={() => switchTab('tree')}
-            >
-              家系図表示
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'list' && (
-          <section className="person-section">
-            <PersonList persons={persons} onPersonSelect={handlePersonSelect} />
+            
+            {loading && (
+              <div className="loading">
+                <p>読み込み中...</p>
+              </div>
+            )}
+            
+            {error && (
+              <div className="error">
+                <p>エラー: {error}</p>
+              </div>
+            )}
+            
+            {warnings.length > 0 && (
+              <div className="warnings">
+                <h3>警告:</h3>
+                <ul>
+                  {warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {familyTree && (
+              <div className="family-info">
+                <h3>家系図情報</h3>
+                <p><strong>タイトル:</strong> {familyTree.title || "(なし)"}</p>
+                <p><strong>説明:</strong> {familyTree.description || "(なし)"}</p>
+                <p><strong>人物数:</strong> {Object.keys(familyTree.getAllPersons()).length}</p>
+                {hasChanges && (
+                  <button 
+                    className="save-button"
+                    onClick={handleSaveFile}
+                    disabled={loading}
+                  >
+                    変更を保存
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         )}
         
-        {activeTab === 'tree' && (
+        {!familyTree && !showFileMenu && (
+          <div className="welcome-section">
+            <h2>ようこそ</h2>
+            <p>家系図アプリケーションへようこそ。</p>
+            <p>「ファイル操作」ボタンをクリックして、JSONファイルを読み込んでください。</p>
+          </div>
+        )}
+        
+        {familyTree && activeTab === 'list' && (
+          <section className="person-section">
+            <PersonList 
+              persons={persons} 
+              onPersonSelect={handlePersonSelect}
+              onPersonEdit={handlePersonEdit}
+            />
+          </section>
+        )}
+        
+        {familyTree && activeTab === 'tree' && (
           <section className="person-section">
             <FamilyTreeGraph 
               hierarchyData={hierarchyData} 
               onPersonSelect={handlePersonSelect} 
+            />
+          </section>
+        )}
+
+        {familyTree && activeTab === 'edit' && editingPerson && (
+          <section className="person-section">
+            <PersonEditor
+              person={editingPerson}
+              onSave={handlePersonSave}
+              onCancel={handlePersonEditCancel}
             />
           </section>
         )}
