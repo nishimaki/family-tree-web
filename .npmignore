@@ -1,0 +1,52 @@
+# 開発環境関連
+.git
+.github
+.gitignore
+.npmignore
+.npmrc
+.editorconfig
+.eslintrc
+.prettierrc
+.vscode
+.idea
+
+# テスト関連
+test
+tests
+coverage
+.nyc_output
+
+# ドキュメント
+docs
+*.md
+!README.md
+
+# 設定ファイル
+*.config.js
+tsconfig.json
+babel.config.js
+webpack.config.js
+
+# ソースマップ
+*.map
+
+# 一時ファイル
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# ビルド関連
+dist
+build
+out
+.cache
+.next
+.nuxt
+
+# その他
+.DS_Store
+Thumbs.db
+.env*
+.wrangler
+.dev.vars 
