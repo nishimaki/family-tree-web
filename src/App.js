@@ -70,7 +70,10 @@ function App() {
     if (familyTree && person.id) {
       setSelectedRootId(person.id);
       setHierarchyData(familyTree.getHierarchyData(person.id));
-      setActiveTab('tree');
+      // すでに家系図タブが表示されている場合は、タブを切り替えない
+      if (activeTab !== 'tree') {
+        setActiveTab('tree');
+      }
       setShowFileMenu(false);
     }
   };
@@ -124,6 +127,19 @@ function App() {
   };
   
   /**
+   * 家族全員表示に戻すハンドラ
+   */
+  const handleResetToAllFamily = () => {
+    if (familyTree) {
+      const rootNodes = familyTree.getRootNodes();
+      if (rootNodes.length > 0) {
+        setSelectedRootId(rootNodes[0]);
+        setHierarchyData(familyTree.getHierarchyData(rootNodes[0]));
+      }
+    }
+  };
+  
+  /**
    * タブ切り替えハンドラ
    * @param {string} tabName 
    */
@@ -173,7 +189,7 @@ function App() {
         </nav>
       </header>
       
-      <main className="app-main">
+      <main className={`app-main ${activeTab === 'tree' ? 'tree-view' : ''}`}>
         {showFileMenu && (
           <section className="file-section">
             <h2>ファイル操作</h2>
@@ -245,12 +261,13 @@ function App() {
               persons={persons} 
               onPersonSelect={handlePersonSelect}
               onPersonEdit={handlePersonEdit}
+              selectedPersonId={selectedRootId}
             />
           </section>
         )}
         
         {familyTree && activeTab === 'tree' && (
-          <section className="person-section">
+          <section className="person-section tree-section">
             <div className="tree-view-controls">
               <button 
                 className="view-toggle-button"
@@ -263,12 +280,14 @@ function App() {
             {treeViewMode === 'simple' ? (
               <FamilyTreeGraph 
                 hierarchyData={hierarchyData} 
-                onPersonSelect={handlePersonSelect} 
+                onPersonSelect={handlePersonSelect}
+                onResetToAllFamily={handleResetToAllFamily}
               />
             ) : (
               <FamilyTreeSVG 
                 hierarchyData={hierarchyData} 
-                onPersonSelect={handlePersonSelect} 
+                onPersonSelect={handlePersonSelect}
+                onResetToAllFamily={handleResetToAllFamily}
               />
             )}
           </section>

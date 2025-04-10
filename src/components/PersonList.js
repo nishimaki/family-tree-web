@@ -1,5 +1,6 @@
 import React from 'react';
 import Gender from '../constants/Gender';
+import './PersonList.css';
 
 /**
  * 人物一覧コンポーネント
@@ -7,8 +8,9 @@ import Gender from '../constants/Gender';
  * @param {Array} props.persons - 表示する人物オブジェクトの配列
  * @param {Function} props.onPersonSelect - 人物選択時のコールバック関数
  * @param {Function} props.onPersonEdit - 人物編集時のコールバック関数
+ * @param {string} props.selectedPersonId - 現在選択されている人物のID
  */
-function PersonList({ persons, onPersonSelect, onPersonEdit }) {
+function PersonList({ persons, onPersonSelect, onPersonEdit, selectedPersonId }) {
   // 性別に対応するラベルを取得
   const getGenderLabel = (gender) => {
     switch (gender) {
@@ -47,13 +49,18 @@ function PersonList({ persons, onPersonSelect, onPersonEdit }) {
           </thead>
           <tbody>
             {persons.map((person, index) => (
-              <tr key={person.id}>
+              <tr 
+                key={person.id}
+                onClick={() => onPersonSelect(person)}
+                className={selectedPersonId === person.id ? 'selected-person' : ''}
+                style={{ cursor: 'pointer' }}
+              >
                 <td>{index + 1}</td>
                 <td>{person.name}</td>
                 <td>{getGenderLabel(person.gender)}</td>
                 <td>{formatDate(person.birth_date)}</td>
                 <td>{formatDate(person.death_date)}</td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <button 
                     className="edit-button"
                     onClick={() => onPersonEdit(person)}

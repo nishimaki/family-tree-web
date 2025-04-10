@@ -57,9 +57,26 @@ body {
 
 .app-main {
   flex: 1;
-  max-width: 1200px;
+  max-width: 1800px; /* 1200pxから1800pxに増加 */
   margin: 0 auto;
   padding: 1rem;
+}
+
+/* 家系図表示時のスタイル - より広い表示領域 */
+.app-main.tree-view {
+  max-width: 95%;
+}
+
+/* 大きな画面サイズ向けのメディアクエリを追加 */
+@media (min-width: 1920px) {
+  .app-main {
+    max-width: 90%; /* より広い画面ではパーセンテージでさらに幅を取る */
+  }
+  
+  /* 家系図表示時のスタイル */
+  .app-main.tree-view {
+    max-width: 95%;
+  }
 }
 
 .welcome-section {
@@ -155,6 +172,12 @@ body {
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 家系図表示用セクションの特別スタイル */
+.person-section.tree-section {
+  width: 100%;
+  padding: 1rem 0.5rem; /* 横のパディングを小さくして表示領域を広げる */
 }
 
 .person-list h2 {

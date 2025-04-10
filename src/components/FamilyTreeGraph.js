@@ -1,13 +1,15 @@
 import React from 'react';
 import Gender from '../constants/Gender';
+import './FamilyTreeGraph.css';
 
 /**
  * 家系図のグラフィカル表示コンポーネント
  * @param {Object} props - プロパティ
  * @param {Object} props.hierarchyData - 家系図の階層構造データ
  * @param {Function} props.onPersonSelect - 人物選択時のコールバック関数
+ * @param {Function} props.onResetToAllFamily - 家族全員表示に戻す時のコールバック関数
  */
-function FamilyTreeGraph({ hierarchyData, onPersonSelect }) {
+function FamilyTreeGraph({ hierarchyData, onPersonSelect, onResetToAllFamily }) {
   // 階層データがない場合
   if (!hierarchyData) {
     return (
@@ -84,6 +86,17 @@ function FamilyTreeGraph({ hierarchyData, onPersonSelect }) {
 
   return (
     <div className="family-tree-graph">
+      <div className="family-tree-controls">
+        {onResetToAllFamily && (
+          <button 
+            onClick={onResetToAllFamily} 
+            className="reset-button"
+            title="家系図の初期表示に戻ります"
+          >
+            家族全員に戻す
+          </button>
+        )}
+      </div>
       <h2>家系図</h2>
       {renderFamilyTree(hierarchyData)}
     </div>

@@ -7,8 +7,9 @@ import './FamilyTreeSVG.css';
  * @param {Object} props - プロパティ
  * @param {Object} props.hierarchyData - 家系図の階層構造データ
  * @param {Function} props.onPersonSelect - 人物選択時のコールバック関数
+ * @param {Function} props.onResetToAllFamily - 家族全員表示に戻す時のコールバック関数
  */
-function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
+function FamilyTreeSVG({ hierarchyData, onPersonSelect, onResetToAllFamily }) {
   const svgRef = useRef(null);
   const [viewBox, setViewBox] = useState("0 0 1000 600");
   const [nodePositions, setNodePositions] = useState({});
@@ -40,6 +41,14 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
     if (!dateStr) return '';
     return dateStr.split('-').slice(0, 2).join('-'); // YYYY-MM形式に
   };
+  
+  // hierarchyDataが変更されたときにズームとパンをリセット
+  useEffect(() => {
+    // 新しい家系図データが表示されるときはズームとパンをリセット
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    setSelectedPerson(null); // 選択されている人物もリセット
+  }, [hierarchyData]);
   
   // 階層データからノード位置を計算
   useEffect(() => {
@@ -114,6 +123,9 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
   
   // ズーム処理
   const handleZoom = (direction) => {
+    // ドラッグ中はズームを変更しない
+    if (isDragging) return;
+    
     if (direction === 'in') {
       setZoom(prev => Math.min(prev * 1.2, 3)); // 最大3倍まで
     } else {
@@ -126,6 +138,11 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const handleMouseDown = (e) => {
+    // ノードクリック時はドラッグを開始しない
+    if (e.target.closest('.family-tree-node')) {
+      return;
+    }
+    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - pan.x,
@@ -163,7 +180,16 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
     return (
       <g 
         key={node.id}
-        onClick={() => handleNodeClick(node)}
+        onClick={(e) => {
+          e.stopPropagation(); // イベントの伝播を停止
+          handleNodeClick(node);
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation(); // マウスダウンイベントの伝播も停止
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation(); // タッチイベントの伝播も停止
+        }}
         className="family-tree-node"
         style={{ cursor: 'pointer' }}
       >
@@ -177,6 +203,8 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           fill={bgColor}
           stroke="#333"
           strokeWidth={1}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         />
         <text
           x={x + width / 2}
@@ -186,6 +214,8 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           fill="#333"
           fontSize="12"
           fontWeight="bold"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         >
           {node.name}
         </text>
@@ -196,6 +226,8 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           dominantBaseline="middle"
           fill="#333"
           fontSize="10"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         >
           {formatDate(node.birth_date)}
           {node.death_date && ` - ${formatDate(node.death_date)}`}
@@ -398,7 +430,11 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
       const pos = nodePositions[node.id];
       if (pos) {
         nodes.push(
-          <g key={node.id}>
+          <g 
+            key={node.id}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             {renderNode(node, pos)}
           </g>
         );
@@ -410,7 +446,11 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           const spousePos = nodePositions[spouse.id];
           if (spousePos) {
             nodes.push(
-              <g key={spouse.id}>
+              <g 
+                key={spouse.id}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
                 {renderNode(spouse, spousePos)}
               </g>
             );
@@ -439,6 +479,15 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           <button onClick={() => handleZoom('out')} className="zoom-button">
             -
           </button>
+          {onResetToAllFamily && (
+            <button 
+              onClick={onResetToAllFamily} 
+              className="reset-button"
+              title="家系図の初期表示に戻ります"
+            >
+              家族全員に戻す
+            </button>
+          )}
         </div>
         <div className="info-text">
           ドラッグして移動、クリックで人物選択
@@ -466,7 +515,7 @@ function FamilyTreeSVG({ hierarchyData, onPersonSelect }) {
           viewBox={viewBox}
           style={{
             transform: `scale(${zoom})`,
-            transformOrigin: 'top left',
+            transformOrigin: 'center', // 'top left'から'center'に変更
             transition: 'transform 0.3s ease',
             cursor: isDragging ? 'grabbing' : 'grab'
           }}
