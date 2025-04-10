@@ -8,18 +8,23 @@ global.URL = {
   revokeObjectURL: jest.fn()
 };
 
-global.Blob = function(content, options) {
+global.Blob = jest.fn((content, options) => {
   return {
     content,
     options
   };
-};
+});
 
 describe('FileManager クラスのテスト', () => {
   let mockFileReader;
   let mockAnchorElement;
   
   beforeEach(() => {
+    // コンソール出力のモック化（テスト出力をクリーンに保つため）
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    
     // FileReader モックのセットアップ
     mockFileReader = {
       onload: null,
@@ -58,6 +63,13 @@ describe('FileManager クラスのテスト', () => {
       }
       return {};
     });
+  });
+  
+  afterEach(() => {
+    // コンソール出力のモックを元に戻す
+    console.log.mockRestore();
+    console.warn.mockRestore();
+    console.error.mockRestore();
   });
   
   // ファイル読み込みのテスト
