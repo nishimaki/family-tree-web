@@ -1,0 +1,115 @@
+{
+  "title": "サンプル家系図",
+  "description": "これはサンプル家系図です",
+  "persons": {
+    "db973fc6-917f-44c0-988c-b2d155d3ad85": {
+      "id": "db973fc6-917f-44c0-988c-b2d155d3ad85",
+      "name": "山田 太郎",
+      "gender": "M",
+      "birth_date": "1940-05-15",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": null,
+      "mother_id": null,
+      "spouse_ids": [
+        "ffc6e15c-abe3-40fa-88c6-07fe864947f0"
+      ],
+      "children_ids": [
+        "8c95809b-7030-4331-aac1-f1a80bcaaa77",
+        "2ba81b87-e6e9-4ea6-aacf-356aeed2f45b",
+        "96c2ef60-dae3-44e6-8626-eda498d74597"
+      ],
+      "note": null
+    },
+    "ffc6e15c-abe3-40fa-88c6-07fe864947f0": {
+      "id": "ffc6e15c-abe3-40fa-88c6-07fe864947f0",
+      "name": "山田 花子",
+      "gender": "F",
+      "birth_date": "1942-10-20",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": null,
+      "mother_id": null,
+      "spouse_ids": [
+        "db973fc6-917f-44c0-988c-b2d155d3ad85"
+      ],
+      "children_ids": [
+        "8c95809b-7030-4331-aac1-f1a80bcaaa77",
+        "2ba81b87-e6e9-4ea6-aacf-356aeed2f45b",
+        "96c2ef60-dae3-44e6-8626-eda498d74597"
+      ],
+      "note": null
+    },
+    "8c95809b-7030-4331-aac1-f1a80bcaaa77": {
+      "id": "8c95809b-7030-4331-aac1-f1a80bcaaa77",
+      "name": "山田 一郎",
+      "gender": "M",
+      "birth_date": "1970-03-08",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": "db973fc6-917f-44c0-988c-b2d155d3ad85",
+      "mother_id": "ffc6e15c-abe3-40fa-88c6-07fe864947f0",
+      "spouse_ids": [
+        "39f49111-f87c-431e-a3bb-d2d0f96bfa0e"
+      ],
+      "children_ids": [],
+      "note": null
+    },
+    "39f49111-f87c-431e-a3bb-d2d0f96bfa0e": {
+      "id": "39f49111-f87c-431e-a3bb-d2d0f96bfa0e",
+      "name": "山田 良子",
+      "gender": "F",
+      "birth_date": "1972-07-15",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": null,
+      "mother_id": null,
+      "spouse_ids": [
+        "8c95809b-7030-4331-aac1-f1a80bcaaa77"
+      ],
+      "children_ids": [],
+      "note": null
+    },
+    "2ba81b87-e6e9-4ea6-aacf-356aeed2f45b": {
+      "id": "2ba81b87-e6e9-4ea6-aacf-356aeed2f45b",
+      "name": "山田 次郎",
+      "gender": "M",
+      "birth_date": "1995-12-10",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": "db973fc6-917f-44c0-988c-b2d155d3ad85",
+      "mother_id": "ffc6e15c-abe3-40fa-88c6-07fe864947f0",
+      "spouse_ids": [],
+      "children_ids": [],
+      "note": null
+    },
+    "96c2ef60-dae3-44e6-8626-eda498d74597": {
+      "id": "96c2ef60-dae3-44e6-8626-eda498d74597",
+      "name": "山田 三郎",
+      "gender": "M",
+      "birth_date": "1998-08-22",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": "db973fc6-917f-44c0-988c-b2d155d3ad85",
+      "mother_id": "ffc6e15c-abe3-40fa-88c6-07fe864947f0",
+      "spouse_ids": [],
+      "children_ids": [
+        "fea73b5c-249b-4f52-863f-360742f7ccea"
+      ],
+      "note": null
+    },
+    "fea73b5c-249b-4f52-863f-360742f7ccea": {
+      "id": "fea73b5c-249b-4f52-863f-360742f7ccea",
+      "name": "山田　シンジ",
+      "gender": "M",
+      "birth_date": "2025-03-31",
+      "death_date": null,
+      "birth_order": null,
+      "father_id": "96c2ef60-dae3-44e6-8626-eda498d74597",
+      "mother_id": null,
+      "spouse_ids": [],
+      "children_ids": [],
+      "note": null
+    }
+  }
+}

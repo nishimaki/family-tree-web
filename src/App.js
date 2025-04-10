@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PersonList from './components/PersonList';
 import PersonEditor from './components/PersonEditor';
 import FamilyTreeGraph from './components/FamilyTreeGraph';
+import FamilyTreeSVG from './components/FamilyTreeSVG';
 import FileManager from './services/FileManager';
 import './App.css';
 
@@ -17,6 +18,7 @@ function App() {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [editingPerson, setEditingPerson] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [treeViewMode, setTreeViewMode] = useState('svg'); // 'simple' または 'svg'
   
   /**
    * ファイル選択イベントハンドラ
@@ -52,6 +54,7 @@ function App() {
       setLoading(false);
       setShowFileMenu(false);
       setHasChanges(false);
+      setActiveTab('list'); // ファイル読み込み後に人物一覧画面を表示
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -86,6 +89,11 @@ function App() {
       setEditingPerson(null);
       setActiveTab('list');
       setHasChanges(true);
+      
+      // 現在選択されているルートノードが更新された場合、階層データも更新
+      if (selectedRootId === editedPerson.id) {
+        setHierarchyData(familyTree.getHierarchyData(selectedRootId));
+      }
     }
   };
 
@@ -109,6 +117,13 @@ function App() {
   };
   
   /**
+   * 表示モード切替ハンドラ
+   */
+  const toggleTreeViewMode = () => {
+    setTreeViewMode(prevMode => prevMode === 'simple' ? 'svg' : 'simple');
+  };
+  
+  /**
    * タブ切り替えハンドラ
    * @param {string} tabName 
    */
@@ -120,7 +135,11 @@ function App() {
   const toggleFileMenu = () => {
     setShowFileMenu(!showFileMenu);
     if (!showFileMenu) {
+      // ファイルメニューを開く際にタブを非表示にする
       setActiveTab(null);
+    } else if (familyTree) {
+      // ファイルメニューを閉じる際に、家系図データがあれば人物一覧画面を表示
+      setActiveTab('list');
     }
   };
   
@@ -232,10 +251,26 @@ function App() {
         
         {familyTree && activeTab === 'tree' && (
           <section className="person-section">
-            <FamilyTreeGraph 
-              hierarchyData={hierarchyData} 
-              onPersonSelect={handlePersonSelect} 
-            />
+            <div className="tree-view-controls">
+              <button 
+                className="view-toggle-button"
+                onClick={toggleTreeViewMode}
+              >
+                表示モード切替: {treeViewMode === 'simple' ? 'シンプル' : 'グラフィカル'}
+              </button>
+            </div>
+            
+            {treeViewMode === 'simple' ? (
+              <FamilyTreeGraph 
+                hierarchyData={hierarchyData} 
+                onPersonSelect={handlePersonSelect} 
+              />
+            ) : (
+              <FamilyTreeSVG 
+                hierarchyData={hierarchyData} 
+                onPersonSelect={handlePersonSelect} 
+              />
+            )}
           </section>
         )}
 
@@ -243,6 +278,8 @@ function App() {
           <section className="person-section">
             <PersonEditor
               person={editingPerson}
+              persons={persons}
+              familyTree={familyTree}
               onSave={handlePersonSave}
               onCancel={handlePersonEditCancel}
             />

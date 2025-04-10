@@ -28,10 +28,29 @@ class FileManager {
           
           // 人物データを追加
           const personsData = data.persons || {};
-          Object.entries(personsData).forEach(([personId, personData]) => {
+          
+          // forEachからfor...ofループに変更し、continueを使用して適切にスキップする
+          for (const [personId, personData] of Object.entries(personsData)) {
             try {
+              // 必須フィールドの検証
+              if (!personData.id || !personData.name) {
+                warnings.push(`人物ID '${personId}' には必須フィールドがありません。スキップします。`);
+                console.warn(`人物データに必須フィールドがありません: ${personId}`);
+                continue; // 次のループへスキップ
+              }
+              
+              // IDを確実に設定
+              personData.id = personId;
+              
               // Personオブジェクトを作成
-              const person = Person.fromDict(personData);
+              const person = new Person(personData);
+              
+              // バリデーションエラーをチェック
+              const validationErrors = person.validate();
+              if (Object.keys(validationErrors).length > 0) {
+                warnings.push(`人物ID '${personId}' のデータにエラーがあります: ${JSON.stringify(validationErrors)}`);
+                continue; // バリデーションエラーがある場合はスキップ
+              }
               
               // 人物をFamilyTreeに追加 (関係性更新はまだ行わない)
               if (!familyTree.addPerson(person)) {
@@ -42,7 +61,7 @@ class FileManager {
               warnings.push(`人物ID '${personId}' の読み込み中にエラーが発生しました: ${e.message}`);
               console.warn(`人物データの読み込み中にエラーが発生しました: ${e.message}`);
             }
-          });
+          }
           
           // 全Personを追加後、FamilyTreeに関係性を構築させる
           console.log(`Triggering relationship building for ${Object.keys(familyTree.getAllPersons()).length} persons...`);
@@ -78,46 +97,61 @@ class FileManager {
    * 家系図データをJSONファイルとして保存する
    * @param {FamilyTree} familyTree - 保存する家系図オブジェクト
    * @param {string} fileName - 保存するファイル名（拡張子なし）
-   * @returns {boolean} - 保存に成功した場合はtrue
+   * @returns {Promise<boolean>} - 保存に成功した場合はtrueを解決するPromise
    */
   static saveFamilyTree(familyTree, fileName) {
-    try {
-      // 保存用データを作成
-      const data = {
-        title: familyTree.title,
-        description: familyTree.description,
-        persons: {}
-      };
-      
-      // 人物データを追加
-      Object.entries(familyTree.getAllPersons()).forEach(([personId, person]) => {
-        data.persons[personId] = person.toDict();
-      });
-      
-      // JSON形式に変換
-      const jsonData = JSON.stringify(data, null, 2);
-      
-      // Blobを作成
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      
-      // ダウンロードリンクを作成
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${fileName || 'family_tree'}.json`;
-      
-      // リンクをクリックしてダウンロードを開始
-      link.click();
-      
-      // URLをクリーンアップ
-      URL.revokeObjectURL(url);
-      
-      console.log(`家系図データを保存しました: ${link.download}`);
-      return true;
-    } catch (e) {
-      console.error(`家系図データの保存中にエラーが発生しました: ${e.message}`);
-      return false;
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        // 保存用データを作成
+        const data = {
+          title: familyTree.title,
+          description: familyTree.description,
+          persons: {}
+        };
+        
+        // 人物データを追加
+        Object.entries(familyTree.getAllPersons()).forEach(([personId, person]) => {
+          data.persons[personId] = {
+            id: person.id,
+            name: person.name,
+            gender: person.gender,
+            birth_date: person.birth_date,
+            death_date: person.death_date,
+            birth_order: person.birth_order,
+            father_id: person.father_id,
+            mother_id: person.mother_id,
+            spouse_ids: [...person.spouse_ids],
+            children_ids: [...person.children_ids],
+            note: person.note
+          };
+        });
+        
+        // JSON形式に変換
+        const jsonData = JSON.stringify(data, null, 2);
+        
+        // Blobを作成
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        
+        // ダウンロードリンクを作成
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${fileName || 'family_tree'}.json`;
+        
+        // リンクをクリックしてダウンロードを開始
+        link.click();
+        
+        // 少し遅延してからURLをクリーンアップし、Promiseを解決
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          console.log(`家系図データを保存しました: ${link.download}`);
+          resolve(true);
+        }, 100);
+      } catch (e) {
+        console.error(`家系図データの保存中にエラーが発生しました: ${e.message}`);
+        reject(e);
+      }
+    });
   }
 }
 

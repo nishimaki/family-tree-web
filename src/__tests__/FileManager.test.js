@@ -188,7 +188,10 @@ describe('FileManager クラスのテスト', () => {
   
   // ファイル保存のテスト
   describe('saveFamilyTree メソッド', () => {
-    test('家系図データをJSONファイルとして保存できること', () => {
+    test('家系図データをJSONファイルとして保存できること', async () => {
+      // Jest TimersをFake Timersに設定
+      jest.useFakeTimers();
+      
       // テスト用の家系図データ
       const tree = new FamilyTree();
       tree.title = 'テスト家系図';
@@ -216,8 +219,14 @@ describe('FileManager クラスのテスト', () => {
       person1.addSpouse('p2');
       person2.addSpouse('p1');
       
-      // 保存処理
-      const result = FileManager.saveFamilyTree(tree, 'test_family');
+      // 保存処理（非同期になったので、Promise解決までのハンドリングが必要）
+      const savePromise = FileManager.saveFamilyTree(tree, 'test_family');
+      
+      // タイマーを進めて、setTimeout内の処理を実行
+      jest.advanceTimersByTime(200);
+      
+      // Promise解決を待つ
+      const result = await savePromise;
       
       // 結果の検証
       expect(result).toBe(true);
@@ -244,20 +253,35 @@ describe('FileManager クラスのテスト', () => {
       
       // URLオブジェクトが解放されていることを確認
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('mock-url');
+      
+      // Fake Timersをクリア
+      jest.useRealTimers();
     });
     
-    test('ファイル名が指定されていない場合、デフォルトのファイル名が使用されること', () => {
+    test('ファイル名が指定されていない場合、デフォルトのファイル名が使用されること', async () => {
+      // Jest TimersをFake Timersに設定
+      jest.useFakeTimers();
+      
       // テスト用の家系図データ
       const tree = new FamilyTree();
       
       // 保存処理
-      FileManager.saveFamilyTree(tree, null);
+      const savePromise = FileManager.saveFamilyTree(tree, null);
+      
+      // タイマーを進める
+      jest.advanceTimersByTime(200);
+      
+      // Promise解決を待つ
+      await savePromise;
       
       // デフォルトのファイル名が使用されていることを確認
       expect(mockAnchorElement.download).toBe('family_tree.json');
+      
+      // Fake Timersをクリア
+      jest.useRealTimers();
     });
     
-    test('例外が発生した場合、falseが返されること', () => {
+    test('例外が発生した場合、Promiseがrejectされること', async () => {
       // テスト用の家系図データ
       const tree = new FamilyTree();
       
@@ -267,11 +291,8 @@ describe('FileManager クラスのテスト', () => {
         throw new Error('Mock error');
       });
       
-      // 保存処理
-      const result = FileManager.saveFamilyTree(tree, 'test_family');
-      
-      // 結果の検証
-      expect(result).toBe(false);
+      // 保存処理がrejectされることを確認
+      await expect(FileManager.saveFamilyTree(tree, 'test_family')).rejects.toThrow('Mock error');
       
       // モックを元に戻す
       URL.createObjectURL = originalCreateObjectURL;

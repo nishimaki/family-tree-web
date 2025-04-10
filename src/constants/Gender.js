@@ -1,6 +1,10 @@
 /**
  * 性別を表す定数
  */
+export const MALE = 'MALE';
+export const FEMALE = 'FEMALE';
+export const UNKNOWN = 'UNKNOWN';
+
 const Gender = {
   MALE: 'M',
   FEMALE: 'F',

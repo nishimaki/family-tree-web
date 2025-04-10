@@ -12,4 +12,4 @@ global.console = {
 // テスト後のクリーンアップ
 afterEach(() => {
   jest.clearAllMocks();
-});
+}); 
