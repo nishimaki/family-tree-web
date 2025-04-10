@@ -256,6 +256,83 @@ class FamilyTree {
   }
 
   /**
+   * 家系図データをグラフィカル表示用の階層構造に変換する
+   * @param {string} rootPersonId - 表示のルートとなる人物ID（指定しない場合は家系図のルートノードが使用される）
+   * @param {number} maxGenerations - 表示する最大世代数（デフォルト: 3）
+   * @returns {Object} - 階層構造データ
+   */
+  getHierarchyData(rootPersonId = null, maxGenerations = 3) {
+    // ルート人物IDが指定されていない場合、家系図のルートノードの最初を使用
+    if (!rootPersonId) {
+      const rootNodes = this.getRootNodes();
+      if (rootNodes.length === 0) {
+        console.warn('家系図にルートノードがありません。');
+        return null;
+      }
+      rootPersonId = rootNodes[0];
+    }
+
+    // 指定されたIDの人物が存在するか確認
+    const rootPerson = this.getPerson(rootPersonId);
+    if (!rootPerson) {
+      console.warn(`指定されたID ${rootPersonId} の人物が見つかりません。`);
+      return null;
+    }
+
+    // 階層構造を再帰的に構築する関数
+    const buildHierarchy = (personId, generation = 0, processedIds = new Set()) => {
+      if (generation >= maxGenerations || processedIds.has(personId)) {
+        return null;
+      }
+
+      const person = this.getPerson(personId);
+      if (!person) {
+        return null;
+      }
+
+      processedIds.add(personId);
+
+      // 基本情報
+      const node = {
+        id: person.id,
+        name: person.name,
+        gender: person.gender,
+        birth_date: person.birth_date,
+        death_date: person.death_date,
+        children: [],
+        spouses: []
+      };
+
+      // 配偶者情報を追加
+      person.spouse_ids.forEach(spouseId => {
+        const spouse = this.getPerson(spouseId);
+        if (spouse) {
+          node.spouses.push({
+            id: spouse.id,
+            name: spouse.name,
+            gender: spouse.gender
+          });
+        }
+      });
+
+      // 子情報を追加（再帰的に子の階層を構築）
+      if (generation < maxGenerations - 1) {
+        person.children_ids.forEach(childId => {
+          const childNode = buildHierarchy(childId, generation + 1, new Set(processedIds));
+          if (childNode) {
+            node.children.push(childNode);
+          }
+        });
+      }
+
+      return node;
+    };
+
+    // 階層構造の構築を開始
+    return buildHierarchy(rootPersonId);
+  }
+
+  /**
    * 指定されたIDの人物データを更新し、関連する関係性を再構築する
    * @param {string} personId - 更新する人物のID
    * @param {Person} updatedPerson - 更新後の Person オブジェクト

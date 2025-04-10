@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PersonList from './components/PersonList';
+import FamilyTreeGraph from './components/FamilyTreeGraph';
 import FileManager from './services/FileManager';
 import './App.css';
 
@@ -9,6 +10,9 @@ function App() {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('list'); // 'list' または 'tree'
+  const [hierarchyData, setHierarchyData] = useState(null);
+  const [selectedRootId, setSelectedRootId] = useState(null);
   
   /**
    * ファイル選択イベントハンドラ
@@ -34,6 +38,13 @@ function App() {
         setWarnings(result.warnings);
       }
       
+      // ルートノードを取得し、階層データを初期化
+      const rootNodes = result.familyTree.getRootNodes();
+      if (rootNodes.length > 0) {
+        setSelectedRootId(rootNodes[0]);
+        setHierarchyData(result.familyTree.getHierarchyData(rootNodes[0]));
+      }
+      
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -48,7 +59,22 @@ function App() {
    */
   const handlePersonSelect = (person) => {
     console.log('Selected person:', person);
-    // 将来的に詳細表示など拡張予定
+    
+    // 選択された人物をルートにした家系図を表示
+    if (familyTree && person.id) {
+      setSelectedRootId(person.id);
+      setHierarchyData(familyTree.getHierarchyData(person.id));
+      // 家系図タブに切り替え
+      setActiveTab('tree');
+    }
+  };
+  
+  /**
+   * タブ切り替えハンドラ
+   * @param {string} tabName 
+   */
+  const switchTab = (tabName) => {
+    setActiveTab(tabName);
   };
   
   return (
@@ -104,9 +130,37 @@ function App() {
           )}
         </section>
         
-        <section className="person-section">
-          <PersonList persons={persons} onPersonSelect={handlePersonSelect} />
-        </section>
+        {familyTree && (
+          <div className="tabs">
+            <div 
+              className={`tab ${activeTab === 'list' ? 'active' : ''}`}
+              onClick={() => switchTab('list')}
+            >
+              人物一覧
+            </div>
+            <div 
+              className={`tab ${activeTab === 'tree' ? 'active' : ''}`}
+              onClick={() => switchTab('tree')}
+            >
+              家系図表示
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'list' && (
+          <section className="person-section">
+            <PersonList persons={persons} onPersonSelect={handlePersonSelect} />
+          </section>
+        )}
+        
+        {activeTab === 'tree' && (
+          <section className="person-section">
+            <FamilyTreeGraph 
+              hierarchyData={hierarchyData} 
+              onPersonSelect={handlePersonSelect} 
+            />
+          </section>
+        )}
       </main>
       
       <footer className="app-footer">

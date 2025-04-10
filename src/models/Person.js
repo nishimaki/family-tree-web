@@ -12,6 +12,8 @@ class Person {
   constructor(data) {
     this.id = data.id;
     this.name = data.name;
+    // 元の性別値を保存（バリデーション用）
+    this.original_gender = data.gender;
     this.gender = data.gender ? Gender.fromString(data.gender) : null;
     this.birth_date = this._formatDate(data.birth_date);
     this.death_date = this._formatDate(data.death_date);
@@ -37,8 +39,8 @@ class Person {
     try {
       // 年のみ (YYYY) の場合 -> YYYY-01-01 として扱う
       if (dateStr.length === 4 && !isNaN(dateStr)) {
-        const dt = new Date(parseInt(dateStr, 10), 0, 1);
-        return dt.toISOString().split('T')[0];
+        // 文字列操作で日付を生成（タイムゾーンの問題を回避）
+        return `${dateStr}-01-01`;
       }
       
       // YYYY-MM-DD 形式を検証
@@ -210,7 +212,9 @@ class Person {
     }
 
     // 性別の検証
-    if (this.gender && ![Gender.MALE, Gender.FEMALE, Gender.UNKNOWN].includes(this.gender)) {
+    // original_genderが有効な値でない場合にエラーを設定
+    const validGenders = ['M', 'F', 'U', 'male', 'female', '', 'm', 'f', 'u'];
+    if (this.original_gender && !validGenders.includes(this.original_gender.toLowerCase())) {
       if (!errors.gender) {
         errors.gender = [];
       }

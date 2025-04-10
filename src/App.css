@@ -34,6 +34,32 @@ body {
   padding: 1rem;
 }
 
+/* タブ切り替え用のスタイル */
+.tabs {
+  display: flex;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  margin-right: 0.5rem;
+  background-color: #f8f8f8;
+}
+
+.tab.active {
+  background-color: white;
+  border-color: #ddd;
+  border-bottom-color: white;
+  margin-bottom: -1px;
+  font-weight: bold;
+  color: #4a6da7;
+}
+
 .app-footer {
   background-color: #333;
   color: white;
@@ -162,6 +188,56 @@ button:hover {
   background-color: #45a049;
 }
 
+/* 家系図グラフィカル表示用のスタイル */
+.family-tree-graph {
+  overflow: auto;
+  margin-top: 1rem;
+}
+
+.family-tree-node {
+  position: relative;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 0.5rem;
+  background-color: white;
+  min-width: 150px;
+  display: inline-block;
+}
+
+.family-tree-node h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #4a6da7;
+}
+
+.family-tree-node p {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.family-tree-level {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.family-tree-children {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.family-tree-spouse {
+  border-left: 1px dashed #ccc;
+  padding-left: 0.5rem;
+  margin-left: 0.5rem;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .person-list table {
@@ -171,6 +247,10 @@ button:hover {
   .person-list th,
   .person-list td {
     padding: 0.5rem;
+  }
+  
+  .family-tree-graph {
+    overflow-x: auto;
   }
 }
 
