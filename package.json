@@ -11,7 +11,8 @@
     "build": "npx webpack --mode production",
     "dev": "npx webpack serve --mode development",
     "_postinstall": "npm run clean",
-    "test": "cat src/__tests__/FileManager.test.js && echo '\\n\\nテストコードが正常に表示されました。開発環境でJestを使用して実行してください。'"
+    "test": "cat src/__tests__/FileManager.test.js && echo '\\n\\nテストコードが正常に表示されました。開発環境でJestを使用して実行してください。'",
+    "test:jest": "jest"
   },
   "config": {
     "prefix": ".npm-packages",

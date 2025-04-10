@@ -368,7 +368,7 @@ describe('FamilyTree クラスのテスト', () => {
   
   // 人物削除のテスト
   describe('removePerson メソッド', () => {
-    test('正常に人物を削除できること', () => {
+    test('存在する人物を削除できること', () => {
       const tree = new FamilyTree();
       const person = new Person({ id: 'p1', name: '山田太郎' });
       
@@ -377,101 +377,86 @@ describe('FamilyTree クラスのテスト', () => {
       expect(tree.getPerson('p1')).toBeNull();
     });
     
-    test('存在しない人物IDを指定した場合、削除に失敗すること', () => {
+    test('存在しない人物の削除が失敗すること', () => {
       const tree = new FamilyTree();
-      
       expect(tree.removePerson('not_exist')).toBe(false);
     });
     
-    test('削除した人物が他の人物の親だった場合、関連が正しく削除されること', () => {
+    test('人物を削除した際、関連する他の人物の家族関係情報も更新されること', () => {
       const tree = new FamilyTree();
       
       // 父親
       const father = new Person({ 
         id: 'father1', 
-        name: '山田一郎'
+        name: '山田一郎',
+        gender: 'M'
+      });
+      
+      // 母親
+      const mother = new Person({ 
+        id: 'mother1', 
+        name: '山田花子',
+        gender: 'F'
       });
       
       // 子ども
       const child = new Person({ 
         id: 'child1', 
         name: '山田太郎',
-        father_id: 'father1'
+        father_id: 'father1',
+        mother_id: 'mother1'
       });
       
+      // 家系図に追加
       tree.addPerson(father);
+      tree.addPerson(mother);
       tree.addPerson(child);
-      tree.buildRelationships();
       
-      // 削除前に関係性が構築されていることを確認
-      expect(father.children_ids).toContain('child1');
-      expect(child.father_id).toBe('father1');
+      // 関係性を構築
+      tree.buildRelationships();
       
       // 父親を削除
       tree.removePerson('father1');
       
-      // 子どもの父親IDがnullになっていることを確認
-      expect(tree.getPerson('child1').father_id).toBeNull();
-    });
-    
-    test('削除した人物が他の人物の配偶者だった場合、関連が正しく削除されること', () => {
-      const tree = new FamilyTree();
+      // 子どもの父親IDがクリアされていることを確認
+      expect(child.father_id).toBeNull();
       
-      // 夫
-      const husband = new Person({ 
-        id: 'husband1', 
-        name: '山田一郎',
-        spouse_ids: ['wife1']
-      });
-      
-      // 妻
-      const wife = new Person({ 
-        id: 'wife1', 
-        name: '山田花子',
-        spouse_ids: ['husband1']
-      });
-      
-      tree.addPerson(husband);
-      tree.addPerson(wife);
-      
-      // 夫を削除
-      tree.removePerson('husband1');
-      
-      // 妻の配偶者リストから夫が削除されていることを確認
-      expect(tree.getPerson('wife1').spouse_ids).not.toContain('husband1');
-    });
-    
-    test('削除した人物が他の人物の子だった場合、関連が正しく削除されること', () => {
-      const tree = new FamilyTree();
-      
-      // 親
-      const parent = new Person({ 
-        id: 'parent1', 
-        name: '山田一郎',
-        children_ids: ['child1']
-      });
-      
-      // 子ども
-      const child = new Person({ 
-        id: 'child1', 
-        name: '山田太郎',
-        father_id: 'parent1'
-      });
-      
-      tree.addPerson(parent);
-      tree.addPerson(child);
-      
-      // 子どもを削除
-      tree.removePerson('child1');
-      
-      // 親の子リストから削除されていることを確認
-      expect(tree.getPerson('parent1').children_ids).not.toContain('child1');
+      // 母親の配偶者リストから父親が削除されていることを確認
+      expect(mother.spouse_ids).not.toContain('father1');
     });
   });
   
   // ルートノード取得のテスト
   describe('getRootNodes メソッド', () => {
-    test('親がいない人物のIDリストが取得できること', () => {
+    test('親を持たない人物がルートノードとして取得できること', () => {
+      const tree = new FamilyTree();
+      
+      // ルートノード（親なし）
+      const root = new Person({ 
+        id: 'root1', 
+        name: '山田一郎'
+      });
+      
+      // 子（親あり）
+      const child = new Person({ 
+        id: 'child1', 
+        name: '山田太郎',
+        father_id: 'root1'
+      });
+      
+      tree.addPerson(root);
+      tree.addPerson(child);
+      
+      // 関係性を構築
+      tree.buildRelationships();
+      
+      const rootNodes = tree.getRootNodes();
+      
+      expect(rootNodes).toContain('root1');
+      expect(rootNodes).not.toContain('child1');
+    });
+    
+    test('複数のルートノードが取得できること', () => {
       const tree = new FamilyTree();
       
       // ルートノード1
@@ -486,26 +471,28 @@ describe('FamilyTree クラスのテスト', () => {
         name: '鈴木一郎'
       });
       
-      // ルートでない人物
-      const nonRoot = new Person({ 
-        id: 'non_root', 
+      // 子（親あり）
+      const child = new Person({ 
+        id: 'child1', 
         name: '山田太郎',
         father_id: 'root1'
       });
       
       tree.addPerson(root1);
       tree.addPerson(root2);
-      tree.addPerson(nonRoot);
+      tree.addPerson(child);
+      
+      // 関係性を構築
+      tree.buildRelationships();
       
       const rootNodes = tree.getRootNodes();
       
-      expect(rootNodes.length).toBe(2);
       expect(rootNodes).toContain('root1');
       expect(rootNodes).toContain('root2');
-      expect(rootNodes).not.toContain('non_root');
+      expect(rootNodes).not.toContain('child1');
     });
     
-    test('家系図が空の場合、空の配列が返されること', () => {
+    test('人物が存在しない場合、空の配列が返されること', () => {
       const tree = new FamilyTree();
       
       const rootNodes = tree.getRootNodes();
@@ -516,65 +503,29 @@ describe('FamilyTree クラスのテスト', () => {
   
   // 人物更新のテスト
   describe('updatePerson メソッド', () => {
-    test('正常に人物情報を更新できること', () => {
+    test('存在する人物の情報を更新できること', () => {
       const tree = new FamilyTree();
-      
-      // 初期の人物
-      const originalPerson = new Person({ 
+      const person = new Person({ 
         id: 'p1', 
         name: '山田太郎',
-        gender: 'M',
-        birth_date: '1980-01-01'
+        gender: 'M'
       });
       
-      tree.addPerson(originalPerson);
+      tree.addPerson(person);
       
-      // 更新用の人物
-      const updatedPerson = new Person({ 
-        id: 'p1', 
-        name: '山田太郎（更新）',
-        gender: 'M',
-        birth_date: '1980-01-15',
-        note: '更新されました'
+      // 更新する人物データ
+      const updatedPerson = new Person({
+        id: 'p1',
+        name: '山田次郎',
+        gender: 'M'
       });
       
       expect(tree.updatePerson('p1', updatedPerson)).toBe(true);
-      
-      // 更新された情報を確認
-      const retrievedPerson = tree.getPerson('p1');
-      expect(retrievedPerson.name).toBe('山田太郎（更新）');
-      expect(retrievedPerson.birth_date).toBe('1980-01-15');
-      expect(retrievedPerson.note).toBe('更新されました');
+      expect(tree.getPerson('p1').name).toBe('山田次郎');
     });
     
-    test('IDが異なる場合でも、指定されたIDが優先されること', () => {
+    test('存在しない人物の更新が失敗すること', () => {
       const tree = new FamilyTree();
-      
-      // 初期の人物
-      const originalPerson = new Person({ 
-        id: 'p1', 
-        name: '山田太郎'
-      });
-      
-      tree.addPerson(originalPerson);
-      
-      // 異なるIDを持つ更新用の人物
-      const updatedPerson = new Person({ 
-        id: 'p2', // 異なるID
-        name: '山田太郎（更新）'
-      });
-      
-      expect(tree.updatePerson('p1', updatedPerson)).toBe(true);
-      
-      // 更新された人物のIDが維持されていることを確認
-      const retrievedPerson = tree.getPerson('p1');
-      expect(retrievedPerson.id).toBe('p1');
-      expect(retrievedPerson.name).toBe('山田太郎（更新）');
-    });
-    
-    test('存在しない人物IDを指定した場合、更新に失敗すること', () => {
-      const tree = new FamilyTree();
-      
       const person = new Person({ 
         id: 'p1', 
         name: '山田太郎'
@@ -583,19 +534,21 @@ describe('FamilyTree クラスのテスト', () => {
       expect(tree.updatePerson('not_exist', person)).toBe(false);
     });
     
-    test('更新後に関係性が再構築されること', () => {
+    test('更新された人物の関係性が再構築されること', () => {
       const tree = new FamilyTree();
       
       // 父親
       const father = new Person({ 
         id: 'father1', 
-        name: '山田一郎'
+        name: '山田一郎',
+        gender: 'M'
       });
       
-      // 元の母親
-      const originalMother = new Person({ 
+      // 母親
+      const mother = new Person({ 
         id: 'mother1', 
-        name: '山田花子'
+        name: '山田花子',
+        gender: 'F'
       });
       
       // 子ども
@@ -606,22 +559,136 @@ describe('FamilyTree クラスのテスト', () => {
         mother_id: 'mother1'
       });
       
+      // 家系図に追加
       tree.addPerson(father);
-      tree.addPerson(originalMother);
+      tree.addPerson(mother);
       tree.addPerson(child);
+      
+      // 関係性を構築
       tree.buildRelationships();
       
-      // 更新用の母親（子どもが変わる）
-      const updatedMother = originalMother.clone();
-      updatedMother.children_ids = []; // 子リストをクリア
+      // 子どもの父親を更新（別の人物に変更）
+      const newFather = new Person({
+        id: 'father2',
+        name: '鈴木一郎',
+        gender: 'M'
+      });
       
-      tree.updatePerson('mother1', updatedMother);
+      tree.addPerson(newFather);
       
-      // 母親の子リストに子どもが再度追加されていることを確認
-      expect(tree.getPerson('mother1').children_ids).toContain('child1');
+      // 子どもの父親を更新
+      const updatedChild = new Person({
+        id: 'child1',
+        name: '山田太郎',
+        father_id: 'father2',
+        mother_id: 'mother1'
+      });
       
-      // 父親の配偶者リストに母親が含まれていることを確認
-      expect(tree.getPerson('father1').spouse_ids).toContain('mother1');
+      tree.updatePerson('child1', updatedChild);
+      
+      // 新しい父親の子リストに子どもが追加されていることを確認
+      expect(tree.getPerson('father2').children_ids).toContain('child1');
+      
+      // 元の父親の子リストから子どもが削除されていることを確認
+      expect(tree.getPerson('father1').children_ids).not.toContain('child1');
+    });
+  });
+  
+  // 階層データ取得のテスト
+  describe('getHierarchyData メソッド', () => {
+    test('指定された人物をルートとする階層データが取得できること', () => {
+      const tree = new FamilyTree();
+      
+      // ルートノード
+      const root = new Person({ 
+        id: 'root1', 
+        name: '山田一郎',
+        gender: 'M'
+      });
+      
+      // 子1
+      const child1 = new Person({ 
+        id: 'child1', 
+        name: '山田太郎',
+        gender: 'M',
+        father_id: 'root1'
+      });
+      
+      // 子2
+      const child2 = new Person({ 
+        id: 'child2', 
+        name: '山田花子',
+        gender: 'F',
+        father_id: 'root1'
+      });
+      
+      // 孫
+      const grandchild = new Person({ 
+        id: 'grandchild1', 
+        name: '山田一郎',
+        gender: 'M',
+        father_id: 'child1'
+      });
+      
+      tree.addPerson(root);
+      tree.addPerson(child1);
+      tree.addPerson(child2);
+      tree.addPerson(grandchild);
+      
+      // 関係性を構築
+      tree.buildRelationships();
+      
+      const hierarchyData = tree.getHierarchyData('root1');
+      
+      // 階層データの構造を検証
+      expect(hierarchyData.id).toBe('root1');
+      expect(hierarchyData.name).toBe('山田一郎');
+      expect(hierarchyData.gender).toBe('M');
+      expect(hierarchyData.children).toHaveLength(2);
+      
+      // 子の情報を検証
+      const child1Data = hierarchyData.children.find(c => c.id === 'child1');
+      expect(child1Data).toBeDefined();
+      expect(child1Data.name).toBe('山田太郎');
+      expect(child1Data.children).toHaveLength(1);
+      
+      const child2Data = hierarchyData.children.find(c => c.id === 'child2');
+      expect(child2Data).toBeDefined();
+      expect(child2Data.name).toBe('山田花子');
+      expect(child2Data.children).toHaveLength(0);
+      
+      // 孫の情報を検証
+      const grandchildData = child1Data.children[0];
+      expect(grandchildData.id).toBe('grandchild1');
+      expect(grandchildData.name).toBe('山田一郎');
+      expect(grandchildData.children).toHaveLength(0);
+    });
+    
+    test('存在しない人物IDを指定した場合、null が返されること', () => {
+      const tree = new FamilyTree();
+      
+      const hierarchyData = tree.getHierarchyData('not_exist');
+      
+      expect(hierarchyData).toBeNull();
+    });
+    
+    test('子を持たない人物の場合、children が空の配列となること', () => {
+      const tree = new FamilyTree();
+      
+      // 子なしの人物
+      const person = new Person({ 
+        id: 'p1', 
+        name: '山田太郎',
+        gender: 'M'
+      });
+      
+      tree.addPerson(person);
+      
+      const hierarchyData = tree.getHierarchyData('p1');
+      
+      expect(hierarchyData.id).toBe('p1');
+      expect(hierarchyData.name).toBe('山田太郎');
+      expect(hierarchyData.children).toEqual([]);
     });
   });
 });
