@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rm -rf node_modules .npm-packages .npm-cache dist",
     "clean:all": "npm run clean && rm -f package-lock.json",
-    "postinstall": "npm run clean",
+    "_postinstall": "npm run clean",
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "dev": "webpack serve --mode development",

@@ -1,74 +1,121 @@
-# React Counter App
+# 家系図アプリケーション
 
-シンプルなReactカウンターアプリケーション
+ReactとJavaScriptを使った家系図作成・管理のためのWebアプリケーションです。
 
-## 機能
+## 機能概要
 
-- カウンターの増減
-- モダンなUI/UXデザイン
-- レスポンシブ対応
+- JSONファイルからの家系図データの読み込み
+- 人物一覧表示
+- 家系図のグラフィカル表示（シンプル表示とSVG表示）
+- 人物情報の編集
+- 家系図データのJSONファイルへの保存
 
-## 技術スタック
+## ディレクトリ構造
 
-- React 18
-- Webpack 5
-- Babel
-- CSS Modules
-
-## 必要条件
-
-- Node.js >= 14.0.0
-- pnpm >= 6.0.0
-
-## インストール
-
-```bash
-# pnpmのインストール（初回のみ）
-npm install -g pnpm
-
-# 依存関係のインストール
-pnpm install
+```
+/src
+  /models             # データモデル
+    Person.js         # 人物データモデル
+    FamilyTree.js     # 家系図データモデル
+  /components         # UIコンポーネント
+    PersonList.js     # 人物一覧コンポーネント
+    PersonEditor.js   # 人物編集コンポーネント
+    FamilyTreeGraph.js # シンプルな家系図表示コンポーネント
+    FamilyTreeSVG.js  # SVGベースの家系図表示コンポーネント
+  /services           # サービス
+    FileManager.js    # ファイル操作サービス
+  /constants          # 定数
+    Gender.js         # 性別定数
+  App.js              # メインアプリケーションコンポーネント
+  index.js            # エントリーポイント
 ```
 
-## 開発
+## データモデル
 
-```bash
-# 開発サーバーの起動
-pnpm run dev
-```
+### Person
 
-ブラウザで http://localhost:8080 を開いてアプリケーションにアクセスできます。
+人物を表すデータモデルで、以下の属性を持ちます：
 
-## ビルド
+- id: 一意の識別子
+- name: 名前
+- gender: 性別（M=男性, F=女性, U=不明）
+- birth_date: 生年月日（YYYY-MM-DD形式）
+- death_date: 死亡日（YYYY-MM-DD形式、なければnull）
+- birth_order: 兄弟姉妹の中での出生順（不明な場合はnull）
+- father_id: 父親のID（いなければnull）
+- mother_id: 母親のID（いなければnull）
+- spouse_ids: 配偶者のIDリスト
+- children_ids: 子のIDリスト
+- note: 備考
 
-```bash
-# プロダクションビルド
-pnpm run build
-```
+### FamilyTree
 
-ビルドされたファイルは`dist`ディレクトリに出力されます。
+家系図全体を表すデータモデルで、以下の属性を持ちます：
+
+- title: 家系図のタイトル
+- description: 家系図の説明
+- _persons: 人物IDをキー、Personオブジェクトを値とするオブジェクト
 
 ## テスト
 
-```bash
-# テストの実行
-pnpm test
+アプリケーションのテストは Jest と React Testing Library を使用しています。
+以下のテストファイルが実装されています：
+
+```
+/src/__tests__
+  /Person.test.js          # Personモデルのテスト
+  /FamilyTree.test.js      # FamilyTreeモデルのテスト
+  /FileManager.test.js     # FileManagerサービスのテスト
+  /PersonEditor.test.js    # PersonEditorコンポーネントのテスト
+  /FamilyTreeGraph.test.js # FamilyTreeGraphコンポーネントのテスト
+  /FamilyTreeSVG.test.js   # FamilyTreeSVGコンポーネントのテスト
+  /App.test.js             # Appコンポーネント統合テスト
 ```
 
-## クリーンアップ
+テストを実行するには以下のコマンドを使用します：
 
 ```bash
-# 一時ファイルの削除
-pnpm run clean
-
-# すべてのキャッシュと依存関係の削除
-pnpm run clean:all
+npm test
 ```
 
-## ライセンス
+カバレッジレポートを生成するには：
 
-MIT
+```bash
+npm test -- --coverage
+```
 
-## 作者
+## 使い方
 
-Your Name
+1. アプリケーションを起動します
+2. 「ファイル操作」ボタンをクリックします
+3. 家系図データのJSONファイルを選択して読み込みます
+4. 「人物一覧」タブで人物の一覧を確認できます
+5. 「表示」ボタンをクリックして家系図を表示します
+6. 「編集」ボタンをクリックして人物情報を編集できます
+7. 編集後は「ファイル操作」→「変更を保存」でデータを保存できます
+
+## JSONファイル形式
+
+家系図データは次のようなJSON形式で保存されます：
+
+```json
+{
+  "title": "家系図のタイトル",
+  "description": "家系図の説明",
+  "persons": {
+    "person-id-1": {
+      "id": "person-id-1",
+      "name": "山田 太郎",
+      "gender": "M",
+      "birth_date": "1940-05-15",
+      "death_date": null,
+      "father_id": null,
+      "mother_id": null,
+      "spouse_ids": ["person-id-2"],
+      "children_ids": ["person-id-3", "person-id-4"],
+      "birth_order": null
+    },
+    // 他の人物データ...
+  }
+}
+```
